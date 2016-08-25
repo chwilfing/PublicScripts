@@ -1,0 +1,77 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dnsLabelPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "DNS Label for the Public IP. Must be lowercase. It should match with the following regular expression: ^[a-z][a-z0-9-]{1,61}[a-z0-9]$ or it will raise an error."
+            }
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location of deployment"
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "defaultValue": "CWvNetTest01",
+            "metadata": {
+                "description": "Name of the vnet created"
+            }
+        },
+        "vSubNetName": {
+            "type": "string",
+            "defaultValue": "CWvSubNet01",
+            "metadata": {
+                "description": "Name of the Subnet created"
+            }
+        },
+        "vNetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "Address Prefix"
+            }
+        },
+        "subnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "Subnet prefix"
+            }
+        }
+    },
+    "variables": {
+        "virtualNetworkName": "[parameters('vNetName')]",
+        "vSubNetName": "[parameters('vSubNetName')]",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vNetName'))]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('vSubNetName'))]",
+        "vNetAddressPrefix" : "[parameters('vNetAddressPrefix')]",
+        "apiVersion": "2015-06-15"
+    },
+    "resources": [
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('virtualNetworkName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('vNetAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('vSubNetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix')]"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

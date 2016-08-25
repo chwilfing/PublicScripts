@@ -1,0 +1,315 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "uniqueDnsName": {
+            "type": "string",
+            "metadata": {
+                "description": "Relative DNS name for the traffic manager profile, resulting FQDN will be <uniqueDnsName>.trafficmanager.net, must be globally unique."
+            }
+        },
+        "uniqueStorageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Relative DNS Name for the Storage Account where the Virtual Machine's disks will be placed, must be globally unique."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "User name for the Virtual Machines."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the Virtual Machines."
+            }
+        },
+        "domainPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the domainjoin of the Virtual Machines."
+            }
+        },
+        "uniqueDnsNameForPublicIP": {
+            "type": "string",
+            "metadata": {
+                "description": "Relative DNS Name for the Public IPs used to access the Virtual Machines, must be globally unique.  An index will be appended for each instance."
+            }
+        },
+        "VMNameADFS": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the ADFS VM to create"
+            }
+        },
+        "VMNameDC": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the DC VM to create"
+            }
+        }
+    },
+    "variables": {
+        "apiVersion": "2016-03-30",
+        "location": "WestEurope",
+        "imagePublisher": "MicrosoftWindowsServer",
+        "imageOffer": "WindowsServer",
+        "imageSKU": "2012-R2-Datacenter",
+        "OSDiskNameADFS": "[concat('vhdOS-',variables('vmNameADFS'))]",
+        "OSDiskNameDC": "[concat('vhdOS-',variables('vmNameDC'))]",
+        "nicNameADFS": "[concat('vNic-',variables('vmNameADFS'))]",
+        "nicNameDC": "[concat('vNic-',variables('vmNameDC'))]",
+        "storageAccountType": "Standard_LRS",
+        "publicIPAddressName": "[concat('PIP-',parameters('uniqueDnsNameForPublicIP'))]",
+        "publicIPAddressType": "Dynamic",
+        "vmStorageAccountContainerName": "vhds",
+        "vmNameADFS": "[parameters('VMNameADFS')]",
+        "vmNameDC": "[parameters('VMNameDC')]",
+        "vmSize": "Standard_D1",
+        "vNetResourceGroup": "CWtestNetworkGroup01",
+        "vNetName": "CWTestvNet01",
+        "vnetID": "[resourceId(variables('vNetResourceGroup'),'Microsoft.Network/virtualNetworks',variables('vNetName'))]",
+        "subnetName": "subServer",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/', variables('subnetName'))]",
+        "domain2join": "2und40.at",
+        "domainOUPath": "CN=Computers,DC=2und40,DC=at",
+        "domainUsername": "admin",
+        "domainJoinOptions": ""
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[parameters('uniqueStorageAccountName')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "accountType": "[variables('storageAccountType')]"
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('uniqueDnsNameForPublicIP')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicNameADFS')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicNameDC')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfigLAN",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2016-02-01",
+            "name": "Nested-LoadBalancer",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "https://cwtemplatecontainer.blob.core.windows.net:443/trafficmanager/LoadBalancer.json",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parametersLink": {
+                    "uri": "https://cwtemplatecontainer.blob.core.windows.net:443/trafficmanager/LoadBalancer.parameter.json",
+                    "contentVersion": "1.0.0.0"
+                }
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('vmNameADFS')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('uniqueStorageAccountName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameADFS'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[variables('vmNameADFS')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('imagePublisher')]",
+                        "offer": "[variables('imageOffer')]",
+                        "sku": "[variables('imageSKU')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat('http://',parameters('uniqueStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskNameADFS'), '.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicNameADFS')))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "type": "Microsoft.Compute/virtualMachines/extensions",
+                    "name": "[concat(variables('vmNameADFS'),'/joindomain')]",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', variables('vmNameADFS'))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "JsonADDomainExtension",
+                        "typeHandlerVersion": "1.0",
+                        "settings": {
+                            "Name": "[variables('domain2join')]",
+                            "Options": "[variables('domainJoinOptions')]",
+                            "OUPath": "[variables('domainOUPath')]",
+                            "Restart": "true",
+                            "User": "[concat(variables('domain2join'),'\\', variables('domainUsername'))]"
+                        },
+                        "protectedsettings": {
+                            "Password": "[parameters('domainPassword')]"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('vmNameDC')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('uniqueStorageAccountName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameDC'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[variables('vmNameDC')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('imagePublisher')]",
+                        "offer": "[variables('imageOffer')]",
+                        "sku": "[variables('imageSKU')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat('http://',parameters('uniqueStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskNameDC'), '.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "protectedsettings": {
+                    "Password": "[parameters('adminPassword')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicNameDC')))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-04-28-preview",
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "VMEndpoint",
+            "location": "global",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+            ],
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Weighted",
+                "dnsConfig": {
+                    "relativeName": "[parameters('uniqueDnsName')]",
+                    "ttl": 30
+                },
+                "monitorConfig": {
+                    "protocol": "https",
+                    "port": 443,
+                    "path": "/FederationMetadata/2007-06/FederationMetadata.xml"
+                },
+                "endpoints": [
+                    {
+                        "name": "CloudADFS",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "targetResourceId": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
+                            "endpointStatus": "Enabled",
+                            "weight": 1
+                        }
+                    },
+                    {
+                        "name": "OnPremADFS",
+                        "type": "Microsoft.Network/trafficManagerProfiles/externalEndpoints",
+                        "properties": {
+                            "target": "ds.wuerth.at",
+                            "endpointStatus": "Enabled",
+                            "weight": 1
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
