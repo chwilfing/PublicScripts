@@ -8,75 +8,18 @@
                 "description": "Relative DNS name for the traffic manager profile, resulting FQDN will be <uniqueDnsName>.trafficmanager.net, must be globally unique."
             }
         },
-        "uniqueStorageAccountName": {
-            "type": "string",
-            "metadata": {
-                "description": "Relative DNS Name for the Storage Account where the Virtual Machine's disks will be placed, must be globally unique."
-            }
-        },
-        "adminUsername": {
-            "type": "string",
-            "metadata": {
-                "description": "User name for the Virtual Machines."
-            }
-        },
-        "adminPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "Password for the Virtual Machines."
-            }
-        },
-        "domainPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "Password for the domainjoin of the Virtual Machines."
-            }
-        },
         "uniqueDnsNameForPublicIP": {
             "type": "string",
             "metadata": {
                 "description": "Relative DNS Name for the Public IPs used to access the Virtual Machines, must be globally unique.  An index will be appended for each instance."
-            }
-        },
-        "VMNameADFS": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the ADFS VM to create"
-            }
-        },
-        "VMNameDC": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the DC VM to create"
             }
         }
     },
     "variables": {
         "apiVersion": "2016-03-30",
         "location": "WestEurope",
-        "imagePublisher": "MicrosoftWindowsServer",
-        "imageOffer": "WindowsServer",
-        "imageSKU": "2012-R2-Datacenter",
-        "OSDiskNameADFS": "[concat('vhdOS-',variables('vmNameADFS'))]",
-        "OSDiskNameDC": "[concat('vhdOS-',variables('vmNameDC'))]",
-        "nicNameADFS": "[concat('vNic-',variables('vmNameADFS'))]",
-        "nicNameDC": "[concat('vNic-',variables('vmNameDC'))]",
-        "storageAccountType": "Standard_LRS",
         "publicIPAddressName": "[concat('PIP-',parameters('uniqueDnsNameForPublicIP'))]",
-        "publicIPAddressType": "Dynamic",
-        "vmStorageAccountContainerName": "vhds",
-        "vmNameADFS": "[parameters('VMNameADFS')]",
-        "vmNameDC": "[parameters('VMNameDC')]",
-        "vmSize": "Standard_D1",
-        "vNetResourceGroup": "CWtestNetworkGroup01",
-        "vNetName": "CWTestvNet01",
-        "vnetID": "[resourceId(variables('vNetResourceGroup'),'Microsoft.Network/virtualNetworks',variables('vNetName'))]",
-        "subnetName": "subServer",
-        "subnetRef": "[concat(variables('vnetID'),'/subnets/', variables('subnetName'))]",
-        "domain2join": "2und40.at",
-        "domainOUPath": "CN=Computers,DC=2und40,DC=at",
-        "domainUsername": "admin",
-        "domainJoinOptions": ""
+        "publicIPAddressType": "Dynamic"
     },
     "resources": [
         {
