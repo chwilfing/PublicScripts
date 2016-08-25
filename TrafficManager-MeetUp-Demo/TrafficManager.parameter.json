@@ -22,6 +22,9 @@
         },
         "VMNameDC": {
             "value": "VMCWDC01"
-        } 
+        },
+        "domainPassword": {
+            "value": "PWGenerat213!"
+        }
 }
 }
