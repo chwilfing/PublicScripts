@@ -9,7 +9,7 @@
             "value": "cwtrafficmgmt01"
         },
         "uniqueStorageAccountName": {
-            "value": "cwstoragevm01"
+            "value": "cwtmstorage01"
         },
         "adminUsername": {
             "value": "chris"
