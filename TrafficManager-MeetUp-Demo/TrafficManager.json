@@ -80,15 +80,6 @@
     },
     "resources": [
         {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Storage/storageAccounts",
-            "name": "[parameters('uniqueStorageAccountName')]",
-            "location": "[variables('location')]",
-            "properties": {
-                "accountType": "[variables('storageAccountType')]"
-            }
-        },
-        {
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('publicIPAddressName')]",
@@ -101,182 +92,10 @@
             }
         },
         {
-            "apiVersion": "[variables('apiVersion')]",
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[variables('nicNameADFS')]",
-            "location": "[variables('location')]",
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig1",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "subnet": {
-                                "id": "[variables('subnetRef')]"
-                            }
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "apiVersion": "[variables('apiVersion')]",
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[variables('nicNameDC')]",
-            "location": "[variables('location')]",
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfigLAN",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "subnet": {
-                                "id": "[variables('subnetRef')]"
-                            }
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "apiVersion": "2016-02-01",
-            "name": "Nested-LoadBalancer",
-            "type": "Microsoft.Resources/deployments",
-            "properties": {
-                "mode": "incremental",
-                "templateLink": {
-                    "uri": "https://cwtemplatecontainer.blob.core.windows.net:443/trafficmanager/LoadBalancer.json",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parametersLink": {
-                    "uri": "https://cwtemplatecontainer.blob.core.windows.net:443/trafficmanager/LoadBalancer.parameter.json",
-                    "contentVersion": "1.0.0.0"
-                }
-            }
-        },
-        {
-            "apiVersion": "[variables('apiVersion')]",
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "[variables('vmNameADFS')]",
-            "location": "[variables('location')]",
-            "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('uniqueStorageAccountName'))]",
-                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameADFS'))]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[variables('vmSize')]"
-                },
-                "osProfile": {
-                    "computerName": "[variables('vmNameADFS')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "[variables('imagePublisher')]",
-                        "offer": "[variables('imageOffer')]",
-                        "sku": "[variables('imageSKU')]",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "name": "osdisk",
-                        "vhd": {
-                            "uri": "[concat('http://',parameters('uniqueStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskNameADFS'), '.vhd')]"
-                        },
-                        "caching": "ReadWrite",
-                        "createOption": "FromImage"
-                    }
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicNameADFS')))]"
-                        }
-                    ]
-                }
-            },
-            "resources": [
-                {
-                    "apiVersion": "[variables('apiVersion')]",
-                    "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat(variables('vmNameADFS'),'/joindomain')]",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[concat('Microsoft.Compute/virtualMachines/', variables('vmNameADFS'))]"
-                    ],
-                    "properties": {
-                        "publisher": "Microsoft.Compute",
-                        "type": "JsonADDomainExtension",
-                        "typeHandlerVersion": "1.0",
-                        "settings": {
-                            "Name": "[variables('domain2join')]",
-                            "Options": "[variables('domainJoinOptions')]",
-                            "OUPath": "[variables('domainOUPath')]",
-                            "Restart": "true",
-                            "User": "[concat(variables('domain2join'),'\\', variables('domainUsername'))]"
-                        },
-                        "protectedsettings": {
-                            "Password": "[parameters('domainPassword')]"
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "apiVersion": "[variables('apiVersion')]",
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "[variables('vmNameDC')]",
-            "location": "[variables('location')]",
-            "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('uniqueStorageAccountName'))]",
-                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameDC'))]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[variables('vmSize')]"
-                },
-                "osProfile": {
-                    "computerName": "[variables('vmNameDC')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "[variables('imagePublisher')]",
-                        "offer": "[variables('imageOffer')]",
-                        "sku": "[variables('imageSKU')]",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "name": "osdisk",
-                        "vhd": {
-                            "uri": "[concat('http://',parameters('uniqueStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskNameDC'), '.vhd')]"
-                        },
-                        "caching": "ReadWrite",
-                        "createOption": "FromImage"
-                    }
-                },
-                "protectedsettings": {
-                    "Password": "[parameters('adminPassword')]"
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicNameDC')))]"
-                        }
-                    ]
-                }
-            }
-        },
-        {
             "apiVersion": "2015-04-28-preview",
             "type": "Microsoft.Network/trafficManagerProfiles",
-            "name": "VMEndpoint",
+            "name": "Endpoint",
             "location": "global",
-            "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
-            ],
             "properties": {
                 "profileStatus": "Enabled",
                 "trafficRoutingMethod": "Weighted",
@@ -285,16 +104,16 @@
                     "ttl": 30
                 },
                 "monitorConfig": {
-                    "protocol": "https",
-                    "port": 443,
-                    "path": "/FederationMetadata/2007-06/FederationMetadata.xml"
+                    "protocol": "http",
+                    "port": 80,
+                    "path": "/"
                 },
                 "endpoints": [
                     {
                         "name": "CloudADFS",
-                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "type": "Microsoft.Network/trafficManagerProfiles/externalEndpoints",
                         "properties": {
-                            "targetResourceId": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
+                            "target": "blog.atwork.at",
                             "endpointStatus": "Enabled",
                             "weight": 1
                         }
@@ -303,7 +122,7 @@
                         "name": "OnPremADFS",
                         "type": "Microsoft.Network/trafficManagerProfiles/externalEndpoints",
                         "properties": {
-                            "target": "ds.wuerth.at",
+                            "target": "partnerblog.at",
                             "endpointStatus": "Enabled",
                             "weight": 1
                         }
