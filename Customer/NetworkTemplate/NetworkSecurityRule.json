@@ -1,0 +1,36 @@
+
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "first_rule",
+            "properties": {
+              "description": "This is the first rule",
+              "protocol": "Tcp",
+              "sourcePortRange": "23-45",
+              "destinationPortRange": "46-56",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 123,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
+            }
+          }
+    ]

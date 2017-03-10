@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "PIPUniqueDNSName": {
+            "defaultValue": "PIPGUIDTEST01",
+            "type": "string",
+            "metadata": {
+                "description": "DNS name of the public IP Object"
+            }
+        },
+        "PIPName": {
+            "defaultValue": "PIPGUIDTEST01",
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Public IP Object"
+            }
+        },
+        "RGName": {
+            "defaultValue": "RG-ADFS",
+            "type": "string",
+            "metadata": {
+                "description": "ResouceGroup name if the TM is in its own Resourcegroup"
+            }
+        },
+        "AzEndPointName1": {
+            "defaultValue": "worker1",
+            "type": "string",
+            "metadata": {
+                "description": "Name of the endpoint for the probe"
+            }
+        },
+        "AzEndPointName2": {
+            "defaultValue": "worker2",
+            "type": "string",
+            "metadata": {
+                "description": "Name of the endpoint for the probe"
+            }
+        }
+    },
+    "variables": {
+        "tmApiVersion": "2015-11-01",
+        "PIPName": "[parameters('PIPName')]",
+        "RGName": "[parameters('RGName')]",
+        "azEndPointResID1": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',variables('RGName') ,'/providers/Microsoft.Network/publicIPAddresses/',variables('PIPName'))]",
+        "azEndPointResID2": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',variables('RGName') ,'/providers/Microsoft.Network/publicIPAddresses/',variables('PIPName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "ADFSGLobalLoadBalance",
+            "apiVersion": "[variables('tmApiVersion')]",
+            "location": "global",
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Performance",
+                "dnsConfig": {
+                    "relativeName": "[parameters('PIPUniqueDNSName')]",
+                    "ttl": 30
+                },
+                "monitorConfig": {
+                    "protocol": "HTTPS",
+                    "port": 443,
+                    "path": "/"
+                },
+                "endpoints": [
+                    {
+                        "name": "[parameters('AzEndPointName1')]",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "targetResourceId": "[variables('azEndPointResID1')]",
+                            "endpointStatus": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "[parameters('AzEndPointName2')]",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "targetResourceId": "[variables('azEndPointResID2')]",
+                            "endpointStatus": "Enabled"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
