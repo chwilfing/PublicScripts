@@ -9,10 +9,10 @@
             "value": "CW"
         },
         "vNet1Name" : {
-            "value": ""
+            "value": "vnet1"
         },
         "vNet2Name" : {
-            "value": ""
+            "value": "vnet2"
         }
         
 

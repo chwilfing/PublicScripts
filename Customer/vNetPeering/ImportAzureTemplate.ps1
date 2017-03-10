@@ -8,7 +8,7 @@ if ($AzureSubscription -eq $null) {
 Set-AzureRmContext -SubscriptionId $AzureSubscription.SubscriptionId
 
 $DeploymentName = (New-Guid).Guid
-$AzureResourceGroupName = 'CWSecretTest01'
+$AzureResourceGroupName = 'CWVNetPeering01'
 $AzureLocation = 'West Europe'
 
 

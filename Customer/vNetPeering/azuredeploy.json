@@ -35,21 +35,22 @@
         "vNet1": {
             "name": "[concat(parameters('vNet1Name'), '-',resourceGroup().location)]",
             "addressSpacePrefix": "10.0.0.0/24",
-            "subnetName": "subnet1",
+            "subnetName": "[concat(parameters('vNet1Name'),'-Sub1')]",
             "subnetPrefix": "10.0.0.0/24",
             "peeringName": "[concat(parameters('vNet1Name'), '-to-', parameters('vNet2Name'))]"
         },
         "vNet2": {
             "name": "[concat(parameters('vNet2Name'), '-',resourceGroup().location)]",
             "addressSpacePrefix": "192.168.0.0/24",
-            "subnetName": "subnet1",
+            "subnetName": "[concat(parameters('vNet2Name'),'-Sub1')]",
             "subnetPrefix": "192.168.0.0/24",
-            "peeringName": "vNet2-to-vNet1"
-        }
+            "peeringName": "[concat(parameters('vNet2Name'), '-to-', parameters('vNet1Name'))]"
+        },
+        "apiVersion": "2016-03-30"
     },
     "resources": [
         {
-            "apiVersion": "2016-03-30",
+            "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[variables('vNet1').name]",
             "location": "[resourceGroup().location]",
@@ -79,10 +80,6 @@
                     "type": "virtualNetworkPeerings",
                     "name": "[variables('vNet1').peeringName]",
                     "location": "[resourceGroup().location]",
-                    "tags": {
-                        "DeploymentType": "[parameters('DeploymentType')]",
-                        "Owner": "[parameters('owner')]"
-                    },
                     "dependsOn": [
                         "[concat('Microsoft.Network/virtualNetworks/', variables('vNet1').name)]",
                         "[concat('Microsoft.Network/virtualNetworks/', variables('vNet2').name)]"
@@ -101,7 +98,7 @@
             ]
         },
         {
-            "apiVersion": "2016-03-30",
+            "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[variables('vNet2').name]",
             "location": "[resourceGroup().location]",
@@ -129,10 +126,6 @@
                 {
                     "apiVersion": "2016-06-01",
                     "type": "virtualNetworkPeerings",
-                    "tags": {
-                        "DeploymentType": "[parameters('DeploymentType')]",
-                        "Owner": "[parameters('owner')]"
-                    },
                     "name": "[variables('vNet2').peeringName]",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
