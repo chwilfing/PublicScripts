@@ -15,18 +15,32 @@
             "metadata": {
                 "description": "Describes the owner of the resource (CW|CWI|TP|MG)"
             }
+        },
+        "vNet1Name": {
+            "type": "string",
+            "defaultValue": "vNet1",
+            "metadata": {
+                "description": "Name of the first VNet to deploy"
+            }
+        },
+        "vNet2Name": {
+            "type": "string",
+            "defaultValue": "vNet2",
+            "metadata": {
+                "description": "Name of the first VNet to deploy"
+            }
         }
     },
     "variables": {
         "vNet1": {
-            "name": "[concat('vNet1-', resourceGroup().location)]",
+            "name": "[concat(parameters('vNet1Name'), '-',resourceGroup().location)]",
             "addressSpacePrefix": "10.0.0.0/24",
             "subnetName": "subnet1",
             "subnetPrefix": "10.0.0.0/24",
-            "peeringName": "vNet1-to-vNet2"
+            "peeringName": "[concat(parameters('vNet1Name'), '-to-', parameters('vNet2Name'))]"
         },
         "vNet2": {
-            "name": "[concat('vNet2-', resourceGroup().location)]",
+            "name": "[concat(parameters('vNet2Name'), '-',resourceGroup().location)]",
             "addressSpacePrefix": "192.168.0.0/24",
             "subnetName": "subnet1",
             "subnetPrefix": "192.168.0.0/24",

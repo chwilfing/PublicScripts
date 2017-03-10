@@ -1,0 +1,61 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "AzureNetworkName": {
+            "value": "NOEV-STP-VNET"
+        },
+        "AzureNetworkPrefix": {
+            "value": "10.0.12.0/22"
+        },
+        "AzureNetworkDNSServer1": {
+            "value": "10.170.170.1"
+        },
+        "AzureNetworkDNSServer2": {
+            "value": "10.170.170.2"
+        },
+        "AzureSubnet1": {
+            "value": "SRV-SUBNET"
+        },
+        "AzureSubnet1Prefix": {
+            "value": "10.0.13.0/24"
+        },
+        "Location": {
+            "value": "westeurope"
+        },
+        "localGatewayName": {
+            "value": "NOEV-STP-LG"
+        },
+        "localGatewayIpAddress": {
+            "value": "86.59.21.3"
+        },
+        "localAddressPrefixes": {
+            "value": [
+                "10.254.0.0/16",
+                "10.0.0.0/22",
+                "10.0.4.0/22",
+                "10.0.8.0/22",
+                "10.8.0.0/22",
+                "10.8.4.0/22"
+            ]
+        },
+        "gatewaySubnetPrefix": {
+            "value": "10.0.12.0/29"
+        },
+        "sharedKey": {
+            "value": "1JASDFh1hwerp23"
+        },
+        "gatewayPublicIPName": {
+            "value": "NOEV-GW-VGW01-PIP01"
+        },
+        "gatewayName": {
+            "value": "NOEV-GW-VGW01"
+        },
+        "connectionName": {
+            "value": "NOEV-STP-VGW01-CON01"
+        },
+        "vpnType": {
+            "value": "RouteBased"
+        }
+    }
+}
