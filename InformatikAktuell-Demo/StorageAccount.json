@@ -9,7 +9,7 @@
             }
         }
     },
-    "variables": {
+    "variables": { 
         "storageAccountType": "Standard_LRS"
     },
     "resources": [
